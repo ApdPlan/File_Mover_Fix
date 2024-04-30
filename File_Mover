@@ -1,0 +1,42 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+
+import os
+
+#designated_folder = "DLs"
+current_folder = os.getcwd()
+
+
+
+
+def enter_term():
+    search_term = input("Enter a search term: ")
+    #print (f"The term {search_term} will now be used to search the designated folder and move all items to a different location under that name.")
+    return(search_term)
+
+
+# if needed setup confirmation if a folder already exists, and setup confirmation for the path being valid
+def make_folder(search_term):
+    print (f"Folder named {search_term} will now be created in {current_folder}.")
+    added_folder = current_folder + "/" + search_term
+    os.mkdir(added_folder)
+
+
+def search_folder(search_term):
+    global search_report
+    search_report = list(os.scandir(current_folder))
+    print(search_report)
+    for i in search_report:
+        #if(search_term in i):
+        print(i)
+    #os.scandir.close()
+    
+
+def main():
+    search_term = enter_term()
+    make_folder(search_term)
+    search_folder(search_term)
+
+
+main()
