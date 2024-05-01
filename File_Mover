@@ -3,11 +3,22 @@
 
 
 import os
+import shutil
 
-#designated_folder = "DLs"
 current_folder = os.getcwd()
+preexisting_files = []
+final_folder_location = None 
 
 
+def save_data_check(final_folder_location):
+    if (final_folder_location == None):
+        final_folder_location = input("Please choose a location where folders will be created.")
+    else:
+        print(f"Folders will be created at {final_folder_location}. Is this correct, y / n?")
+        if (True):
+            pass
+        else:
+            pass
 
 
 def enter_term():
@@ -16,27 +27,64 @@ def enter_term():
     return(search_term)
 
 
-# if needed setup confirmation if a folder already exists, and setup confirmation for the path being valid
+
 def make_folder(search_term):
-    print (f"Folder named {search_term} will now be created in {current_folder}.")
     added_folder = current_folder + "/" + search_term
-    os.mkdir(added_folder)
+    if (os.path.isdir(added_folder)):
+        print("folder exists")
+        pass
+    else:
+        print (f"Folder named {search_term} will now be created in {current_folder}.")
+        os.mkdir(added_folder)
+    return added_folder
 
 
-def search_folder(search_term):
-    global search_report
-    search_report = list(os.scandir(current_folder))
-    print(search_report)
+def search_folder(search_term, added_folder):
+    search_report = os.listdir(current_folder)
+    found_title = 0
+    not_found_title = 0
+    total_folders = 0
+    duplicates_found = 0
+    files_moved = 0
     for i in search_report:
-        #if(search_term in i):
-        print(i)
+        if (os.path.isfile(i)):
+            if(search_term.lower() in i.lower()):
+                print(i)
+                found_title += 1
+                #shutil.copyfile(i, added_folder)
+                new_file = added_folder + "/" + i
+                #print(new_file)
+                if (os.path.isfile(new_file)):
+                    #print("Already exists.")
+                    preexisting_files.append(i)
+                    duplicates_found += 1
+                else:
+                    files_moved += 1
+                    shutil.move(i, added_folder)
+            else:
+                #print("not found")
+                not_found_title += 1
+            #print("It's a file")
+        else:
+            #print("It's a directory")
+            #print(i)
+            total_folders += 1
+    print (f" Total files found: {found_title} \n Total files scanned: {found_title + not_found_title} \n Total folders found: {total_folders}") 
+    print (f" Total files moved: {files_moved} \n Total files that may be duplicate: {duplicates_found}")
+    if (duplicates_found > 0):
+        print ("The following files appear to be duplicates: \n", preexisting_files)
     #os.scandir.close()
     
 
+def copy_files_to_folder():
+    pass
+    
+
 def main():
+    save_data_check(final_folder_location)
     search_term = enter_term()
-    make_folder(search_term)
-    search_folder(search_term)
+    added_folder = make_folder(search_term)
+    search_folder(search_term, added_folder)
 
 
 main()
