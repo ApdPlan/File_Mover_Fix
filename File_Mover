@@ -4,17 +4,39 @@
 
 import os
 import shutil
+import pickle
 
 current_folder = os.getcwd()
 preexisting_files = []
-final_folder_location = None 
+folder_handling = {}
+dict_key = 0
 
 
-def save_data_check(final_folder_location):
-    if (final_folder_location == None):
-        final_folder_location = input("Please choose a location where folders will be created.")
+def save_data_check(folder_handling):
+    save_file_loc = current_folder + "/FileMoverSaveData.pkl"
+    #  Handle confirmation and (if necessary) creation of save data file.
+    if (os.path.isfile(save_file_loc)):
+        print("found save file")
+        with open(save_file_loc, 'rb') as open_file:
+            folder_handling = pickle.load(open_file)
+            open_file.close
+        print("post load folder handling: ", folder_handling)
+            
     else:
-        print(f"Folders will be created at {final_folder_location}. Is this correct, y / n?")
+        with open(save_file_loc, 'w') as init_file:
+            init_file.write("")
+            init_file.close()
+    #  Add location where directories will be created to the save data or confirm if the location needs to change.
+    if (len(folder_handling) == 0):
+        global dict_key
+        folder_handling[dict_key] = input("Please choose a location where folders will be created. \n Destination: ")
+        dict_key += 1
+        print(folder_handling)
+        with open(save_file_loc, 'wb') as save_file:
+            pickle.dump(folder_handling, save_file) #(FolderHandling, save_file)
+            save_file.close()
+    else:
+        print(f"Folders will be created at {folder_handling}. Is this correct, y / n?")
         if (True):
             pass
         else:
@@ -51,29 +73,22 @@ def search_folder(search_term, added_folder):
             if(search_term.lower() in i.lower()):
                 print(i)
                 found_title += 1
-                #shutil.copyfile(i, added_folder)
                 new_file = added_folder + "/" + i
-                #print(new_file)
                 if (os.path.isfile(new_file)):
-                    #print("Already exists.")
                     preexisting_files.append(i)
                     duplicates_found += 1
                 else:
                     files_moved += 1
                     shutil.move(i, added_folder)
             else:
-                #print("not found")
                 not_found_title += 1
-            #print("It's a file")
         else:
-            #print("It's a directory")
-            #print(i)
             total_folders += 1
     print (f" Total files found: {found_title} \n Total files scanned: {found_title + not_found_title} \n Total folders found: {total_folders}") 
     print (f" Total files moved: {files_moved} \n Total files that may be duplicate: {duplicates_found}")
     if (duplicates_found > 0):
         print ("The following files appear to be duplicates: \n", preexisting_files)
-    #os.scandir.close()
+    
     
 
 def copy_files_to_folder():
@@ -81,10 +96,10 @@ def copy_files_to_folder():
     
 
 def main():
-    save_data_check(final_folder_location)
+    save_data_check(folder_handling)
     search_term = enter_term()
-    added_folder = make_folder(search_term)
-    search_folder(search_term, added_folder)
+    #added_folder = make_folder(search_term)
+    #search_folder(search_term, added_folder)
 
 
 main()
