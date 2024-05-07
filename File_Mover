@@ -3,8 +3,10 @@
 
 
 import os
-import shutil
 import pickle
+import shutil
+import tkinter as tk
+import tkinter.ttk as ttk
 
 current_folder = os.getcwd()
 preexisting_files = []
@@ -12,35 +14,107 @@ folder_handling = {}
 dict_key = 0
 
 
-def save_data_check(folder_handling):
+def start_gui():
+    root = tk.Tk()
+    root.title("File Mover")
+    frm = ttk.Frame(root, padding = 20)
+    frm.grid()
+    ttk.Label(frm, text = "").grid(column = 0, row = 1)
+    ttk.Button(frm, text = "Run", command = run_button).grid(column = 1, row = 0)   
+    ttk.Button(frm, text = "Add Process", command = add_process_button).grid(column = 1, row = 1)   
+    ttk.Button(frm, text = "Quit", command = root.destroy).grid(column = 2, row = 10)
+    root.mainloop()
+
+
+def add_process_button():
+    run_window = tk.Toplevel()
+    run_window.title("Run Window")
+    frm = ttk.Frame(run_window, padding = 20)
+    frm.grid()
+    ttk.Label(frm, text = "Enter path where a folder will be created:").grid(column = 0, row = 0)
+    ttk.Label(frm, text = "Enter path to folder that will be searched:").grid(column = 0, row = 3)
+    ttk.Label(frm, text = "Enter term to search for and move:").grid(column = 0, row = 6)
+
+    folder_path_string = tk.StringVar()
+    folder_path_entry = ttk.Entry(frm, textvariable = folder_path_string)
+    folder_path_entry.grid(column = 0, row = 1)
+    
+    search_path_string = tk.StringVar()
+    search_path_entry = ttk.Entry(frm, textvariable = search_path_string)
+    search_path_entry.grid(column = 0, row = 4)
+    
+    search_term_string = tk.StringVar()
+    search_term_entry = ttk.Entry(frm, textvariable = search_term_string)
+    search_term_entry.grid(column = 0, row = 7)
+
+    ttk.Button(frm, text = "Test Add", command = lambda: add_process(folder_path_string, search_path_string, search_term_string)).grid(column = 0, row = 8)
+    ttk.Button(frm, text = "Modify", command = not_implemented).grid(column = 0, row = 9)
+    ttk.Button(frm, text = "Back", command = run_window.destroy).grid(column = 1, row = 10)
+
+
+def add_process(folder_path_string, search_path_string, search_term_string):
+    #print("running", folder_path_string.get(), search_path_string.get(), search_term_string.get())
+    global dict_key
+    #temp_list = []
+    folder_handling[dict_key] = (folder_path_string.get(), search_path_string.get(), search_term_string.get())
+    #folder_handling.update({dict_key, temp_list})
+    dict_key += 1
+    print (folder_handling)
+    save_data_input(folder_handling)
+
+
+def run_button():
+    run_window = tk.Toplevel()
+    run_window.title("Run Window")
+    frm = ttk.Frame(run_window, padding = 20)
+    frm.grid()
+    ttk.Button(frm, text = "Run", command = not_implemented).grid(column = 0, row = 0)
+    ttk.Button(frm, text = "Back", command = run_window.destroy).grid(column = 1, row = 10)
+
+
+def not_implemented():
+    run_window = tk.Toplevel()
+    run_window.title("Not implemented")
+    frm = ttk.Frame(run_window, padding = 20)
+    frm.grid()
+    ttk.Label(frm, text = "This isn't implemented yet.").grid(column = 0, row = 0)
+
+
+
+
+
+
+def startup_save_data_check(folder_handling):
     save_file_loc = current_folder + "/FileMoverSaveData.pkl"
-    #  Handle confirmation and (if necessary) creation of save data file.
     if (os.path.isfile(save_file_loc)):
         print("found save file")
         with open(save_file_loc, 'rb') as open_file:
             folder_handling = pickle.load(open_file)
             open_file.close
         print("post load folder handling: ", folder_handling)
-            
+        global dict_key
+        dict_key = len(folder_handling.keys())
+        print(folder_handling.keys())
+        #print(folder_handling.values())
+        print(dict_key)
     else:
         with open(save_file_loc, 'w') as init_file:
             init_file.write("")
             init_file.close()
+
+
+def save_data_input(folder_handling):
     #  Add location where directories will be created to the save data or confirm if the location needs to change.
-    if (len(folder_handling) == 0):
-        global dict_key
-        folder_handling[dict_key] = input("Please choose a location where folders will be created. \n Destination: ")
-        dict_key += 1
-        print(folder_handling)
-        with open(save_file_loc, 'wb') as save_file:
-            pickle.dump(folder_handling, save_file) #(FolderHandling, save_file)
-            save_file.close()
-    else:
-        print(f"Folders will be created at {folder_handling}. Is this correct, y / n?")
-        if (True):
-            pass
-        else:
-            pass
+    save_file_loc = current_folder + "/FileMoverSaveData.pkl"
+    #if (len(folder_handling) == 0):
+        #global dict_key
+        #folder_handling[dict_key] = input("Please choose a location where folders will be created. \n Destination: ")
+        #dict_key += 1
+        #print(folder_handling)
+    with open(save_file_loc, 'wb') as save_file:
+        pickle.dump(folder_handling, save_file) #(FolderHandling, save_file)
+        save_file.close()
+
 
 
 def enter_term():
@@ -96,8 +170,9 @@ def copy_files_to_folder():
     
 
 def main():
-    save_data_check(folder_handling)
-    search_term = enter_term()
+    startup_save_data_check(folder_handling)
+    start_gui()
+    #search_term = enter_term()
     #added_folder = make_folder(search_term)
     #search_folder(search_term, added_folder)
 
