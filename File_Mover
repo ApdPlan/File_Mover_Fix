@@ -8,6 +8,8 @@ import shutil
 import tkinter as tk
 import tkinter.ttk as ttk
 
+
+
 current_folder = os.getcwd()
 preexisting_files = []
 folder_handling = {}
@@ -16,6 +18,14 @@ dict_key = 0
 
 def start_gui():
     root = tk.Tk()
+    # Add Menubar items
+    menubar = tk.Menu(root)
+    helpmenu = tk.Menu(menubar, tearoff = 0)
+    menubar.add_cascade(label = "Help", menu = helpmenu)
+    helpmenu.add_command(label = "About...", command = not_implemented())
+    root.config(menu=menubar)
+    
+    # Add buttons and labels
     root.title("File Mover")
     frm = ttk.Frame(root, padding = 20)
     frm.grid()
@@ -23,18 +33,19 @@ def start_gui():
     ttk.Button(frm, text = "Run", command = run_button).grid(column = 1, row = 0)   
     ttk.Button(frm, text = "Add Process", command = add_process_button).grid(column = 1, row = 1)   
     ttk.Button(frm, text = "Quit", command = root.destroy).grid(column = 2, row = 10)
+    
     root.mainloop()
 
 
 def add_process_button():
     run_window = tk.Toplevel()
-    run_window.title("Run Window")
+    run_window.title("Add Process")
     frm = ttk.Frame(run_window, padding = 20)
     frm.grid()
-    ttk.Label(frm, text = "Enter path where a folder will be created:").grid(column = 0, row = 0)
-    ttk.Label(frm, text = "Enter path to folder that will be searched:").grid(column = 0, row = 3)
+    ttk.Label(frm, text = "Enter an absolute path where a folder will be created:").grid(column = 0, row = 0)
+    ttk.Label(frm, text = "Enter an absolute path to folder that will be searched:").grid(column = 0, row = 3)
     ttk.Label(frm, text = "Enter term to search for and move:").grid(column = 0, row = 6)
-
+    
     folder_path_string = tk.StringVar()
     folder_path_entry = ttk.Entry(frm, textvariable = folder_path_string)
     folder_path_entry.grid(column = 0, row = 1)
@@ -47,20 +58,26 @@ def add_process_button():
     search_term_entry = ttk.Entry(frm, textvariable = search_term_string)
     search_term_entry.grid(column = 0, row = 7)
 
-    ttk.Button(frm, text = "Test Add", command = lambda: add_process(folder_path_string, search_path_string, search_term_string)).grid(column = 0, row = 8)
+    ttk.Button(frm, text = "Add", command = lambda: add_process(folder_path_string, search_path_string, search_term_string)).grid(column = 0, row = 8)
     ttk.Button(frm, text = "Modify", command = not_implemented).grid(column = 0, row = 9)
     ttk.Button(frm, text = "Back", command = run_window.destroy).grid(column = 1, row = 10)
+    
+    columns = ("Search Term" )
+    search_tree = ttk.Treeview(frm, columns = columns)
+    search_tree.grid(column = 0, row = 20)
+    search_tree.heading('Search Term', text = 'Search Term').grid(column = 0, row = 20)
+    
+    
 
 
 def add_process(folder_path_string, search_path_string, search_term_string):
-    #print("running", folder_path_string.get(), search_path_string.get(), search_term_string.get())
     global dict_key
-    #temp_list = []
-    folder_handling[dict_key] = (folder_path_string.get(), search_path_string.get(), search_term_string.get())
-    #folder_handling.update({dict_key, temp_list})
+    global folder_handling
+    folder_handling[dict_key] = [folder_path_string.get(), search_path_string.get(), search_term_string.get()]
     dict_key += 1
     print (folder_handling)
-    save_data_input(folder_handling)
+    save_data_input()
+    
 
 
 def run_button():
@@ -68,7 +85,7 @@ def run_button():
     run_window.title("Run Window")
     frm = ttk.Frame(run_window, padding = 20)
     frm.grid()
-    ttk.Button(frm, text = "Run", command = not_implemented).grid(column = 0, row = 0)
+    ttk.Button(frm, text = "Run", command = run_process).grid(column = 0, row = 0)
     ttk.Button(frm, text = "Back", command = run_window.destroy).grid(column = 1, row = 10)
 
 
@@ -80,12 +97,21 @@ def not_implemented():
     ttk.Label(frm, text = "This isn't implemented yet.").grid(column = 0, row = 0)
 
 
+def run_process():
+    global folder_handling
+    if (len(folder_handling) > 0  ): 
+        for i in folder_handling:
+            print(folder_handling[i])
+            make_folder(folder_handling[i][0], folder_handling[i][2])
+            search_folder(folder_handling[i][0],folder_handling[i][1] ,folder_handling[i][2])
+            # folder creation location - 0, search path - 1, search term - 2
+    else:
+        print("There are no processes to run.")
 
 
-
-
-def startup_save_data_check(folder_handling):
+def startup_save_data_check():
     save_file_loc = current_folder + "/FileMoverSaveData.pkl"
+    global folder_handling
     if (os.path.isfile(save_file_loc)):
         print("found save file")
         with open(save_file_loc, 'rb') as open_file:
@@ -95,86 +121,78 @@ def startup_save_data_check(folder_handling):
         global dict_key
         dict_key = len(folder_handling.keys())
         print(folder_handling.keys())
-        #print(folder_handling.values())
         print(dict_key)
+        return(folder_handling)
+    
     else:
         with open(save_file_loc, 'w') as init_file:
             init_file.write("")
             init_file.close()
 
 
-def save_data_input(folder_handling):
+def save_data_input():
     #  Add location where directories will be created to the save data or confirm if the location needs to change.
+    global folder_handling
     save_file_loc = current_folder + "/FileMoverSaveData.pkl"
-    #if (len(folder_handling) == 0):
-        #global dict_key
-        #folder_handling[dict_key] = input("Please choose a location where folders will be created. \n Destination: ")
-        #dict_key += 1
-        #print(folder_handling)
     with open(save_file_loc, 'wb') as save_file:
         pickle.dump(folder_handling, save_file) #(FolderHandling, save_file)
         save_file.close()
+    print(folder_handling)
 
 
-
-def enter_term():
-    search_term = input("Enter a search term: ")
-    #print (f"The term {search_term} will now be used to search the designated folder and move all items to a different location under that name.")
-    return(search_term)
-
-
-
-def make_folder(search_term):
-    added_folder = current_folder + "/" + search_term
+def make_folder(creation_location, search_term): #
+    global folder_handling
+    global dict_key
+    added_folder = creation_location + "/" + search_term
     if (os.path.isdir(added_folder)):
         print("folder exists")
         pass
     else:
-        print (f"Folder named {search_term} will now be created in {current_folder}.")
+        print (f"Folder named {search_term} will now be created in {creation_location}.")
         os.mkdir(added_folder)
     return added_folder
 
 
-def search_folder(search_term, added_folder):
-    search_report = os.listdir(current_folder)
+def search_folder(creation_location, search_location, search_term):
+    added_folder = creation_location + "/" + search_term
+    search_report = os.listdir(search_location)
     found_title = 0
     not_found_title = 0
     total_folders = 0
     duplicates_found = 0
     files_moved = 0
+    
     for i in search_report:
-        if (os.path.isfile(i)):
+        searched_file = search_location + "/" + i
+        if (os.path.isfile(searched_file)):
             if(search_term.lower() in i.lower()):
                 print(i)
                 found_title += 1
                 new_file = added_folder + "/" + i
+                
                 if (os.path.isfile(new_file)):
                     preexisting_files.append(i)
                     duplicates_found += 1
                 else:
                     files_moved += 1
-                    shutil.move(i, added_folder)
+                    print("trying to move")
+                    shutil.move(searched_file, added_folder)
+                    
             else:
                 not_found_title += 1
         else:
             total_folders += 1
+            
     print (f" Total files found: {found_title} \n Total files scanned: {found_title + not_found_title} \n Total folders found: {total_folders}") 
     print (f" Total files moved: {files_moved} \n Total files that may be duplicate: {duplicates_found}")
     if (duplicates_found > 0):
         print ("The following files appear to be duplicates: \n", preexisting_files)
     
-    
-
-def copy_files_to_folder():
-    pass
-    
 
 def main():
-    startup_save_data_check(folder_handling)
+    startup_save_data_check()
+    #print("main section folder_handling: ", folder_handling)
     start_gui()
-    #search_term = enter_term()
-    #added_folder = make_folder(search_term)
-    #search_folder(search_term, added_folder)
 
 
 main()
